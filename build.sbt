@@ -6,3 +6,5 @@ scalaVersion := "2.13.3"
 
 libraryDependencies += "dev.zio" %% "zio"         % "1.0.0"
 libraryDependencies += "dev.zio" %% "zio-streams" % "1.0.0"
+
+addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")

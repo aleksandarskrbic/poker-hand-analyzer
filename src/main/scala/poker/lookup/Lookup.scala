@@ -1,12 +1,8 @@
 package poker.lookup
 
-import java.nio.file.{ Path, Paths }
+import zio._
 
 import poker.model.EqClass
-import zio._
-import zio.blocking.Blocking
-import zio.stream.{ ZStream, ZTransducer }
-import zio.{ UIO, ZLayer }
 
 object Lookup {
 

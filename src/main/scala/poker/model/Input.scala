@@ -1,11 +1,12 @@
 package poker.model
 
 final case class Input(board: Board, hands: List[StartHand]) {
-  def allCards: Map[StartHand, List[Card]] =
+  def allCards: Map[StartHand, List[Card]]        =
     hands.map(_ -> board.cards).toMap.map { case (k, v) => k -> (List(k.first, k.second) ++ v) }
 
-  def allCombinations: Map[StartHand, List[Hand]] = // allCards.combinations(5).map(Hand).toList
+  def allCombinations: Map[StartHand, List[Hand]] =
     allCards.map { case (k, v) => k -> v.combinations(5).map(Hand).toList }
+
 }
 
 object Input {
@@ -15,11 +16,10 @@ object Input {
       board <- Board.make(input.split(" ")(0))
       hands <- {
         val hands = input.split(" ").tail.toList.map(StartHand.make)
+        val valid = hands.forall(_.isDefined)
 
-        if (!hands.exists(_.isEmpty))
-          Some(hands.map(_.get))
-        else
-          None
+        if (valid) Some(hands.map(_.get))
+        else None
       }
     } yield Input(board, hands)
 }

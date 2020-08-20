@@ -1,12 +1,12 @@
 package poker
 
+import zio._
+import zio.stream._
+import zio.blocking._
 import java.nio.file.{ Path, Paths }
 
-import poker.lookup.Lookup.LiveLookupTable
 import poker.model.EqClass
-import zio.blocking.Blocking
-import zio.stream.{ ZStream, ZTransducer }
-import zio.{ Has, RIO, Task, UIO, URIO, ZIO, ZLayer }
+import poker.lookup.Lookup.LiveLookupTable
 
 package object lookup {
   type LookupTable = Has[LookupTable.Service]

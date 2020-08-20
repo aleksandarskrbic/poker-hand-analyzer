@@ -16,7 +16,7 @@ object Suit {
   }
 
   final case object Club extends Suit {
-    override def toString = "d"
+    override def toString = "c"
   }
 
   def apply(input: Char): Option[Suit] =

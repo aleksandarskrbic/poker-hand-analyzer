@@ -50,32 +50,42 @@ object Application extends zio.App {
   def processInput(text: String): IO[InvalidInputError, Input] =
     ZIO.fromOption(Input.make(text)).orElseFail(InvalidInputError("Invalid input format!"))
 
-  def analyzeInputs(inputs: List[Input], map: Map[EqClass, Int]): UIO[List[List[(StartHand, Int)]]] =
+  def analyzeInputs(
+    inputs: List[Input],
+    map: Map[EqClass, Int]
+  ): UIO[List[List[(StartHand, Int)]]] =
     ZIO.collect(inputs)(input => calculateRank(combinationsByHand(input), map))
 
-  def calculateRank(value: Map[StartHand, List[EqClass]], map: Map[EqClass, Int]): UIO[List[(StartHand, Int)]] =
+  def calculateRank(
+    value: Map[StartHand, List[EqClass]],
+    map: Map[EqClass, Int]
+  ): UIO[List[(StartHand, Int)]] =
     ZIO.collect(value.toList) {
       case (k, v) =>
         ZIO.collect(v)(eqClass => ZIO.succeed(k -> map(eqClass))).map(_.minBy(_._2))
     }
 
-  def combinationsByHand(input: Input): Map[StartHand, List[EqClass]]                                      =
+  def combinationsByHand(input: Input): Map[StartHand, List[EqClass]] =
     input.allCombinations.map { case (k, v) => k -> v.map(EqClass.make) }
 
-  def sortOutput(output: List[List[(StartHand, Int)]]): ZIO[Any, Nothing, List[List[(Int, List[String])]]] =
+  def sortOutput(
+    output: List[List[(StartHand, Int)]]
+  ): UIO[List[List[(Int, List[String])]]]                             =
     ZIO.collect(output) { line =>
       for {
         grouped <- ZIO.succeed(line.groupBy(_._2))
-        sorted  <- ZIO.succeed(grouped.map { case (k, v) => k -> v.map(_._1).map(_.toString).sortBy(identity) })
+        sorted  <- ZIO.succeed(grouped.map {
+                    case (k, v) => k -> v.map(_._1).map(_.toString).sortBy(identity)
+                  })
       } yield sorted.toList.sortBy(_._1).reverse
     }
 
-  def prepareOutput(output: List[List[(StartHand, Int)]]) =
-    ZIO.collect(output) { line =>
-      for {
-        grouped <- ZIO.succeed(line.groupBy(_._2))
-      } yield grouped
-    }
+  def prettyPrint(output: List[(Int, List[String])]): String =
+    output.map {
+      case (_, h :: Nil) => h
+      case (_, cards)    => cards.mkString(" ", "=", "")
+      case _             => ""
+    }.mkString(" ").trim
 
   val program: ZIO[Blocking with Console, Nothing, Unit] =
     for {
@@ -85,14 +95,9 @@ object Application extends zio.App {
       result   <- loop(queue)
       inputs   <- result.takeAll
       analyzed <- analyzeInputs(inputs, map)
-      //output   <- prepareOutput(analyzed)
       sorted   <- sortOutput(analyzed)
-      _        <- ZIO.foreach_(sorted) { input =>
-             ZIO.foreach_(input) {
-               case (_, h :: Nil) => putStr(h)
-               case (_, cards)    => ZIO.foreach_(cards)(card => putStr(card + "="))
-             }
-           }
+      _        <- putStrLn("Output: ")
+      _        <- ZIO.foreach_(sorted)(input => putStrLn(prettyPrint(input)))
     } yield ()
 
   override def run(args: List[String]) =

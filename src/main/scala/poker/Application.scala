@@ -59,16 +59,15 @@ object Application extends zio.App {
         ZIO.collect(v)(eqClass => ZIO.succeed(k -> map(eqClass))).map(_.minBy(_._2))
     }
 
-  def combinationsByHand(input: Input): Map[StartHand, List[EqClass]]                                         =
+  def combinationsByHand(input: Input): Map[StartHand, List[EqClass]]                                      =
     input.allCombinations.map { case (k, v) => k -> v.map(EqClass.make) }
 
-  def sortOutput(output: List[List[(StartHand, Int)]]): ZIO[Any, Nothing, List[List[List[(StartHand, Int)]]]] =
+  def sortOutput(output: List[List[(StartHand, Int)]]): ZIO[Any, Nothing, List[List[(Int, List[String])]]] =
     ZIO.collect(output) { line =>
       for {
-        grouped <- ZIO.succeed(line.groupBy(_._2).toList)
-        sorted  <- ZIO.succeed(grouped.map(_._2.sortBy(_._1.toString)))
-      } yield sorted
-    //ZIO.succeed(input.sortBy(row => (-row._2, row._1.toString)))
+        grouped <- ZIO.succeed(line.groupBy(_._2))
+        sorted  <- ZIO.succeed(grouped.map { case (k, v) => k -> v.map(_._1).map(_.toString).sortBy(identity) })
+      } yield sorted.toList.sortBy(_._1).reverse
     }
 
   def prepareOutput(output: List[List[(StartHand, Int)]]) =
@@ -88,7 +87,12 @@ object Application extends zio.App {
       analyzed <- analyzeInputs(inputs, map)
       //output   <- prepareOutput(analyzed)
       sorted   <- sortOutput(analyzed)
-      _        <- putStrLn("")
+      _        <- ZIO.foreach_(sorted) { input =>
+             ZIO.foreach_(input) {
+               case (_, h :: Nil) => putStr(h)
+               case (_, cards)    => ZIO.foreach_(cards)(card => putStr(card + "="))
+             }
+           }
     } yield ()
 
   override def run(args: List[String]) =

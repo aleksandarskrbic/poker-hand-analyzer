@@ -3,7 +3,7 @@ package poker.model
 final case class Hand(cards: List[Card]) {
   def isFlush: Boolean = cards.map(_.suit).distinct.size == 1
 
-  def toEqClass =
+  def toEqClass: String =
     cards
       .groupBy(_.rank)
       .toSeq

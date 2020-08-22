@@ -15,11 +15,11 @@ object LookupTable {
   def live(path: String): ZLayer[Blocking, Throwable, LookupTable] =
     ZLayer.fromEffect {
       for {
-        path        <- pathFromString(path)
-        lookupTable <- loadTable(path)
+        path  <- pathFromString(path)
+        table <- loadTable(path)
       } yield new Service {
         override def getRank(eqClass: EqClass) =
-          ZIO.succeed(lookupTable.getOrElse(eqClass, Int.MaxValue))
+          ZIO.succeed(table.getOrElse(eqClass, Int.MaxValue))
       }
     }
 

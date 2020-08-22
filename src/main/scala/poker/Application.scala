@@ -16,15 +16,15 @@ object Application extends zio.App {
   val program: ZIO[Console with LookupTable with Blocking, Nothing, Unit] =
     for {
       queue    <- Queue.unbounded[Input]
-      result   <- loop(queue)
-      inputs   <- result.takeAll
-      analyzed <- analyzeInputs(inputs)
+      inputs   <- gameLoop(queue)
+      result   <- inputs.takeAll
+      analyzed <- analyzeInputs(result)
       sorted   <- sortOutput(analyzed)
       _        <- putStrLn("Output: ")
       _        <- ZIO.foreach_(sorted)(input => putStrLn(prettyPrint(input)))
     } yield ()
 
-  def loop(queue: Queue[Input]): URIO[Console, Queue[Input]] =
+  def gameLoop(queue: Queue[Input]): URIO[Console, Queue[Input]] =
     for {
       _    <- putStrLn("Enter board and hands [Press A if you want to analyze hands]:")
       text <- getStrLn.orDie
@@ -32,8 +32,8 @@ object Application extends zio.App {
                 case true  => ZIO.succeed(queue)
                 case false =>
                   processInput(text).foldM(
-                    error => putStrLn(error.text) *> loop(queue),
-                    input => queue.offer(input).flatMap(_ => loop(queue))
+                    error => putStrLn(error.text) *> gameLoop(queue),
+                    input => queue.offer(input).flatMap(_ => gameLoop(queue))
                   )
               }
     } yield queue
@@ -57,9 +57,7 @@ object Application extends zio.App {
     ZIO.collect(output) { line =>
       for {
         grouped <- ZIO.succeed(line.groupBy(_._2))
-        sorted  <- ZIO.succeed(grouped.map {
-                     case (k, v) => k -> v.map(_._1).map(_.toString).sortBy(identity)
-                   })
+        sorted  <- ZIO.succeed(grouped.map { case (k, v) => k -> v.map(_._1).map(_.toString).sortBy(identity) })
       } yield sorted.toList.sortBy(_._1).reverse.map(_._2)
     }
 

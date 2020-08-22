@@ -1,12 +1,11 @@
 package poker.model
 
 final case class Input(board: Board, hands: List[StartHand]) {
-  def allCards: Map[StartHand, List[Card]]        =
+  private val allCards: Map[StartHand, List[Card]] =
     hands.map(_ -> board.cards).toMap.map { case (k, v) => k -> (List(k.first, k.second) ++ v) }
 
-  def allCombinations: Map[StartHand, List[Hand]] =
+  def allCombinations: Map[StartHand, List[Hand]]  =
     allCards.map { case (k, v) => k -> v.combinations(5).map(Hand).toList }
-
 }
 
 object Input {

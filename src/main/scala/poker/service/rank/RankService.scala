@@ -3,7 +3,6 @@ package poker.service.rank
 import zio._
 import zio.stream._
 import zio.blocking._
-
 import java.nio.file.{ Path, Paths }
 
 import poker.model.common._
@@ -14,19 +13,19 @@ object RankService {
     def getRank(eqClass: EqClass): UIO[Int]
   }
 
-  def live(path: String): ZLayer[Blocking, Throwable, RankService] =
+  def live(currentDir: String, path: String): ZLayer[Blocking, Throwable, RankService] =
     ZLayer.fromEffect {
       for {
-        path  <- pathFromString(path)
+        path  <- pathFromString(currentDir, path)
         table <- loadTable(path)
       } yield new Service {
-        override def getRank(eqClass: EqClass): UIO[Int] =
+        override def getRank(eqClass: EqClass) =
           ZIO.succeed(table.getOrElse(eqClass, Int.MaxValue))
       }
     }
 
-  private def pathFromString(path: String): Task[Path] =
-    Task.effect(Paths.get(getClass.getClassLoader.getResource(path).getPath))
+  private def pathFromString(currentDir: String, path: String): UIO[Path] =
+    ZIO.succeed(Paths.get(currentDir + path))
 
   private def loadTable(path: Path): RIO[Blocking, Map[EqClass, Int]] =
     ZStream

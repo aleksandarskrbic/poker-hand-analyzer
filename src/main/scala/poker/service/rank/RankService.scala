@@ -1,24 +1,26 @@
-package poker.repository.lookup
+package poker.service.rank
 
 import zio._
 import zio.stream._
 import zio.blocking._
-import java.nio.file.{ Path, Paths }
-import poker.model.EqClass
 
-object LookupTable {
+import java.nio.file.{ Path, Paths }
+
+import poker.model.common._
+
+object RankService {
 
   trait Service {
     def getRank(eqClass: EqClass): UIO[Int]
   }
 
-  def live(path: String): ZLayer[Blocking, Throwable, LookupTable] =
+  def live(path: String): ZLayer[Blocking, Throwable, RankService] =
     ZLayer.fromEffect {
       for {
         path  <- pathFromString(path)
         table <- loadTable(path)
       } yield new Service {
-        override def getRank(eqClass: EqClass) =
+        override def getRank(eqClass: EqClass): UIO[Int] =
           ZIO.succeed(table.getOrElse(eqClass, Int.MaxValue))
       }
     }
@@ -33,6 +35,7 @@ object LookupTable {
       .map(cleanLine)
       .mapM(processLine)
       .runCollect
+      .map(_.sortBy(_._2))
       .map(_.toMap)
 
   private def cleanLine(line: String): String =

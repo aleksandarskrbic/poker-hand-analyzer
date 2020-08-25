@@ -1,4 +1,4 @@
-package poker.model
+package poker.model.common
 
 sealed trait Rank {
   def value: Int

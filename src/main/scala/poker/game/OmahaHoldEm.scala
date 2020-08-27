@@ -2,7 +2,6 @@ package poker.game
 
 import zio._
 import zio.console._
-
 import poker.service.rank._
 import poker.model.common._
 import poker.model.error._
@@ -12,7 +11,7 @@ object OmahaHoldEm {
 
   def loop(): ZIO[Console with RankService, Nothing, Unit] =
     for {
-      text <- getStrLn.orDie
+      text <- ZIO.effect(io.StdIn.readLine()).orDie
       _    <- shouldQuit(text).flatMap {
                 case true  => ZIO.succeed(())
                 case false =>

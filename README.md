@@ -8,7 +8,7 @@ Main idea of this algorithm is that every hand can be encoded to [Hand Equivalen
 0. Install [Scala and SBT](http://www.codebind.com/linux-tutorials/install-scala-sbt-java-ubuntu-18-04-lts-linux/)
 1. `git clone git@github.com:aleksandarskrbic/poker-hand-analyzer.git && cd poker-hand-analyzer`
 2. To run TexasHoldEm evaluator: `sbt run`
-2. To run OmahaHoldEm evaluator: `sbt "run --omaha`
+2. To run OmahaHoldEm evaluator: `sbt "run --omaha"`
 
 ## How to pipe file with inputs:
  Assume that test files are in project_root/tests/{file_name}
